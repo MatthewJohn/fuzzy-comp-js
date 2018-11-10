@@ -102,19 +102,15 @@ function compare_string(a, b) {
         }
         // Add score to each found element
         if (x in a_map && y in a_map[x] && z in a_map[x][y]) {
-            console.log(x + ' ' + y + ' ' + z);
             a_map[x][y][z].forEach(function (mapped_char) {
-                if (mapped_char.score == 0 ||
-                        mapped_char.score / mapped_char.score_fraction_denominator < 1) {
-                    // Increase the score by a fraction
-                    // of the number of elements in
-                    // the map
-                    // NOTE due to floating point errors,
-                    // dividing is moved to results section!
-                    mapped_char.score += 1;
-                    mapped_char.score_fraction_denominator += a_map[x][y][mapped_char.z].length;
-                    //console.log('found character');
-                }
+                // Increase the score by a fraction
+                // of the number of elements in
+                // the map
+                // NOTE due to floating point errors,
+                // dividing is moved to results section!
+                mapped_char.score += 1;
+                mapped_char.score_fraction_denominator += a_map[x][y][z].length;
+                //console.log('found character');
             });
         } else {
             b_unfound.push(character);
@@ -124,7 +120,8 @@ function compare_string(a, b) {
     // Iterate character objects from a
     var a_unfound = [];
     //var total_score = 0;
-    var found_objects = 0;
+    //var found_objects = 0;
+    var found_characters = 0;
 
     a_map['all'].forEach(function (a_obj) {
         // If the character has a score of 0,
@@ -138,7 +135,7 @@ function compare_string(a, b) {
             // Increment total found objects
             //found_objects ++;
             // Add object score to total score
-            found_objects += (Math.pow(a_obj.score, 2) == a_obj.score_fraction_denominator);
+            found_characters += Math.floor(a_obj.score / a_obj.score_fraction_denominator);
         }
     });
 
@@ -155,7 +152,7 @@ function compare_string(a, b) {
     // use the max of the two numbers
     var missing_characters = Math.max(a_unfound.length, b_unfound.length);
 
-    console.log('Found: ' + found_objects);
+    console.log('Found: ' + found_characters);
     console.log('Missing: ' + missing_characters);
 }
 
