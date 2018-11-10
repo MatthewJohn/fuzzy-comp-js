@@ -119,9 +119,8 @@ function compare_string(a, b) {
 
     // Iterate character objects from a
     var a_unfound = [];
-    //var total_score = 0;
-    //var found_objects = 0;
-    var found_characters = 0;
+    var total_score = 0;
+    var total_denominator = 0;
 
     a_map['all'].forEach(function (a_obj) {
         // If the character has a score of 0,
@@ -133,18 +132,18 @@ function compare_string(a, b) {
         // Otherwise, process score
         } else {
             // Increment total found objects
-            //found_objects ++;
+            total_score += a_obj.score;
             // Add object score to total score
-            found_characters += Math.floor(a_obj.score / a_obj.score_fraction_denominator);
+            total_denominator += a_obj.score_fraction_denominator;
         }
     });
 
     // Avoid devide zero #CaughtBeforeTesting
-    // var found_characters = 0;
-    // if (found_objects > 0) {
-    //     // @TODO should this be floor?
-    //     found_characters = Math.floor(total_score / found_objects);
-    // }
+    var found_characters = 0;
+    if (total_score > 0) {
+        // @TODO should this be floor?
+        found_characters = Math.floor(total_score / total_denominator);
+    }
 
     // Determine number of mising characters
     // Since a missed 'a' character could match up
