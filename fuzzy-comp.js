@@ -38,6 +38,8 @@ function compare_string(a, b) {
     // The characters in a will be pushed into an array with, as well as
     // all of the allowed difference
 
+    // Character map for determining X position (itx of character in string)
+    // and Y position (map element).
     var maps = ['\\zxcvbnm,./', 'asdfghjkl;\'#', 'qwertyuiop[]', '1234567890-='];
 
     // Maximum axis offset for a valid character
@@ -50,6 +52,10 @@ function compare_string(a, b) {
     //                score difference would be 1.
     //              - A missing character would count 1 (either misssing from a or b)
     var max_score_difference = 1;
+
+    // Convert strings to lower case
+    a = a.toLowerCase();
+    b = b.toLowerCase();
 
     // Maximum score is based on total number of characters (either a or b)
     // since missing characters in a or b will result in a decreased score.
@@ -111,6 +117,7 @@ function compare_string(a, b) {
         }
         // Add score to each found element
         if (x in a_map && y in a_map[x] && z in a_map[x][y]) {
+            //total_score += 1 / a_map[x][y][z].length;
             a_map[x][y][z].forEach(function (mapped_char) {
                 // Onl allow characters to have a maximum score
                 // of 1.
@@ -123,16 +130,29 @@ function compare_string(a, b) {
                     // The score to add will be a fraction of how accurate the character match is.
                     // Increase the score by a fraction  of the number of elements in
                     // the map.
-                    // If there's a difference in xy or z, the score will be decreased.
+                    // If there's a difference in xy or z, the score will be decreased....
+                    // The numerator, is by default 1, however, for each xy or z position away
+                    // divide by 2, i.e. 1 / (2 ^ number of positions away)
+                    // The denominator is the maximum score that we expect this object
+                    // can have, i.e. each object in the object map will be triggered by this
+                    // character. The denominator must make the total score across all objects
+                    // that is being added by this loop to, represent 1.
+                    // Since we are expecting map.length number of hits, and each once
+                    // will provide a value of 1 / (2 ^ n positions away), the actual character
+                    // a z will provide 1/denom, the characters either side will provide x/denom.
+                    // The number of characters either side is determined by the length of the map array.
+                    // Number of side characters (array length / 2) plus 1 for the current position.
+                    // If max_offset is changed to a higher number, then we must use:
+                    // (1 / 2 ^ Math.abs(obj.z - z)) @TODO <--- THIS
                     // NOTE due to floating point errors,
                     // dividing is moved to results section! (not any more)
-                    mapped_char.score += (1 / Math.abs(1 + diff_xy + diff_z)) / a_map[x][y][z].length;
+                    var numerator = (1 / Math.pow(2, diff_xy + diff_z));
+                    // This will not work if max_offset is changed.
+                    var denom = (((a_map[x][y][z].length - 1) / 2) + 1);
+                    mapped_char.score += numerator / denom;
                     console.log(mapped_char);
-                    // console.log(a_map[x][y][z]);
-                    // console.log(mapped_char.score);
 
                     //mapped_char.score_fraction_denominator += a_map[x][y][z].length;
-                    //console.log('found character');
                 }
             });
         } else {
