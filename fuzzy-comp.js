@@ -51,7 +51,8 @@ function compare_string(a, b) {
     //                e.g. if 2 characters are switched by 1 place, the
     //                score difference would be 1.
     //              - A missing character would count 1 (either misssing from a or b)
-    var max_score_difference = 1;
+    var max_score_difference = 2;
+    var max_missing_characters = 1;
 
     // Convert strings to lower case
     a = a.toLowerCase();
@@ -117,6 +118,10 @@ function compare_string(a, b) {
         }
         // Add score to each found element
         if (x in a_map && y in a_map[x] && z in a_map[x][y]) {
+
+            // See docs bolow for exaplanation
+            var denom = a_map[x][y][z].map(obj => 1 / Math.pow(2, Math.abs(obj.z - z))).reduce((a, b) => a + b, 0);
+
             a_map[x][y][z].forEach(function (mapped_char) {
                 // Onl allow characters to have a maximum score
                 // of 1.
@@ -125,22 +130,6 @@ function compare_string(a, b) {
                 // original character location
                 var diff_xy = Math.max(Math.abs(x - mapped_char.x), Math.abs(y - mapped_char.y)) 
                 var diff_z = Math.abs(z - mapped_char.z);
-
-                if (diff_xy || diff_z) {
-                    console.log('Found Difference...');
-
-                    console.log(a_map);
-                    console.log(mapped_char);
-                    console.log(x);
-                    console.log(y);
-                    console.log(z);
-                    console.log(diff_xy);
-                    console.log(diff_z);
-                    console.log(1 / Math.pow(2, diff_xy + diff_z));
-                    // This will not work if max_offset is changed.
-                    console.log(((a_map[x][y][z].length - 1) / 2) + 1);
-                    console.log('--- END DIFFERENCE ---');
-                }
 
                 // The score to add will be a fraction of how accurate the character match is.
                 // Increase the score by a fraction  of the number of elements in
@@ -157,17 +146,10 @@ function compare_string(a, b) {
                 // a z will provide 1/denom, the characters either side will provide x/denom.
                 // The number of characters either side is determined by the length of the map array.
                 // Number of side characters (array length / 2) plus 1 for the current position.
-                // If max_offset is changed to a higher number, then we must use:
-                // (1 / 2 ^ Math.abs(obj.z - z)) @TODO <--- THIS
                 // NOTE due to floating point errors,
                 // dividing is moved to results section! (not any more)
                 var numerator = (1 / Math.pow(2, diff_xy + diff_z));
-                // This will not work if max_offset is changed.
-                var denom = (((a_map[x][y][z].length - 1) / 2) + 1);
                 mapped_char.scores.push([numerator, denom]);
-
-                //mapped_char.score_fraction_denominator += a_map[x][y][z].length;
-                //}
             });
         } else {
             b_unfound.push(character);
@@ -178,7 +160,7 @@ function compare_string(a, b) {
     var a_unfound = [];
     var scores = [];
     var total_score = 0;
-    //var total_denominator = 0;
+    var min_denom = null;
 
     a_map['all'].forEach(function (a_obj) {
         // If the character has a score of 0,
@@ -192,76 +174,52 @@ function compare_string(a, b) {
             // Increment total found objects
             a_obj.scores.forEach(function(score){
                 scores.push(score);
+                if (min_denom == null) {
+                    min_denom = score[1];
+                } else {
+                    min_denom = Math.min(min_denom, score[1]);
+                }
             });
-            // Add object score to total score
-            //total_denominator += a_obj.score_fraction_denominator;
         }
     });
 
     // Iterate through all scores,
     // Determine lowest common multiple for the denominator
-    var score_anumerator = 0;
-    var score_denominator = 0;
-    function gcd(a, b) {
-        a = Math.abs(a);
-        b = Math.abs(b);
-        while (b) {
-            var t = b;
-            b = a % b;
-            a = t;
-        }
-        return a;
-    }
-    function calc_lowest_multiple(a, b) {
-        return (!a || !b) ? 0 : Math.abs((a * b) / gcd(a, b));
-    }
+    var score_numerator = 0;
+    var score_denominator = 1;
     scores.forEach(function(score) {
         // Calculate score denominator across all scores.
-        score_denominator = calc_lowest_multiple(score[1], score_denominator);
+        score_denominator = calc_lowest_multiple(score_denominator, score[1]);
     });
     scores.forEach(function(score) {
-        // Calculate anumerator for single score and add to total enumerator
-        score_anumerator += (score[0] * score_denominator / score[1])
+        // Calculate numerator for single score and add to total enumerator
+        score_numerator += (score[0] * score_denominator / score[1])
     });
-    // If score denominator does not equal 0, 
-    if (score_denominator != 0) {
-        total_score = score_anumerator / score_denominator;
-    }
-
+    console.log(score_numerator);
+    console.log(score_denominator);
+    // If score denominator does not equal 0,
     // Avoid devide zero #CaughtBeforeTesting
-    //var found_characters = 0;
-    // if (total_score > 0) {
-    //     // @TODO should this be floor?
-    //     //found_characters = Math.floor(total_score / total_denominator);
-    //     console.log(total_score);
-    //     found_characters = Math.floor(total_score);
-    // }
-    console.log('found characters: ' + total_score);
-
-    // Determine number of mising characters
-    // Since a missed 'a' character could match up
-    // with a missed 'b' character (or just completely wrong),
-    // use the max of the two numbers
-    var missing_characters = Math.max(a_unfound.length, b_unfound.length);
-    total_score -= missing_characters;
-    console.log('Missing: ' + missing_characters);
-    console.log('total score: ' + total_score);
-    console.log('Max score: ' + max_score)
-
-    console.log('Passed: ' + (total_score >= (max_score - max_score_difference)))
+    if (score_denominator != 0) {
+        total_score = score_numerator / score_denominator;
+    }
+    return (total_score >= (max_score - max_score_difference));
 }
 
 /* Fuzzy character used for storing original
  * information about a character
  */
 function fuzzy_char(char, x, y, z) {
+    // Store actual character
     this.char = char;
+
+    // Store actual x, y, z co-ordinates
     this.x = x;
     this.y = y;
     this.z = z;
-    this.score = 0;
+
+    // Store list of scores
     this.scores = [];
-    //this.score_fraction_denominator = 0;
+
     return this;
 }
 
@@ -307,5 +265,11 @@ function insert_fuzzy(map, char, x, y, z, max_offset) {
     }
 }
 
-//compare_string('and', 'anf');
-compare_string('aaa', 'aaa');
+/* Calculate greates common dividor */
+function gcd(a, b) {
+    return !b ? a : gcd(b, a % b);
+}
+/* Calculate lowest common multiple */
+function calc_lowest_multiple(a, b) {
+    return (a * b) / gcd(a, b);
+}
