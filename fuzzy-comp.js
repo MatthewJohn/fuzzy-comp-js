@@ -52,6 +52,9 @@ function compare_string(a, b) {
     //                score difference would be 1.
     //              - A missing character would count 1 (either misssing from a or b)
     var max_score_difference = 1;
+    if (a.length < 3) {
+        max_score_difference = 0.99;
+    }
 
     // Convert strings to lower case
     a = a.toLowerCase();
@@ -176,7 +179,7 @@ function compare_string(a, b) {
                 // NOTE due to floating point errors,
                 // dividing is moved to results section! (not any more)
                 var numerator = (1 / Math.pow(2, diff_xy + diff_z));
-                var denom = a_map[x][y][z].map(
+                var denom = 0.5 + a_map[x][y][z].map(
                     obj => (
                         1 / Math.pow(
                             2,
@@ -186,6 +189,7 @@ function compare_string(a, b) {
                 ).reduce((a, b) => a + b, 0);
                 console.log(numerator);
                 console.log(denom);
+                console.log(char_itx);
                 // Push score to objecs list of scores
                 mapped_char.scores.push([numerator, denom]);
             });
@@ -207,19 +211,19 @@ function compare_string(a, b) {
         // to list of not found a characters
         if (a_obj.scores.length == 0) {
             a_unfound.push(a_obj);
-
-        // Otherwise, process score
-        } else {
-            // Increment total found objects
-            a_obj.scores.forEach(function(score){
-                scores.push(score);
-                if (score_denominator == null) {
-                    score_denominator = score[1];
-                } else {
-                    score_denominator = Math.min(score_denominator, score[1]);
-                }
-            });
+            // This object to receive a score of 0
+            a_obj.scores.push([0, 1]);
         }
+
+        // Increment total found objects
+        a_obj.scores.forEach(function(score){
+            scores.push(score);
+            if (score_denominator == null) {
+                score_denominator = score[1];
+            } else {
+                score_denominator = Math.min(score_denominator, score[1]);
+            }
+        });
     });
 
     // Iterate through all scores,
