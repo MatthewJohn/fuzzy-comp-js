@@ -52,7 +52,6 @@ function compare_string(a, b) {
     //                score difference would be 1.
     //              - A missing character would count 1 (either misssing from a or b)
     var max_score_difference = 2;
-    var max_missing_characters = 1;
 
     // Convert strings to lower case
     a = a.toLowerCase();
@@ -114,21 +113,20 @@ function compare_string(a, b) {
         if (x == null || y == null) {
             // @TODO conform with whatever return
             // is used at end of the function
+            console.log('what');
             return 0;
         }
         // Add score to each found element
         if (x in a_map && y in a_map[x] && z in a_map[x][y]) {
 
             // See docs bolow for exaplanation
-            var denom = a_map[x][y][z].map(obj => 1 / Math.pow(2, Math.abs(obj.z - z))).reduce((a, b) => a + b, 0);
-
             a_map[x][y][z].forEach(function (mapped_char) {
                 // Onl allow characters to have a maximum score
                 // of 1.
                 // if (mapped_char.score < 1) {
                 // Calculate difference in xy and z values, based on
                 // original character location
-                var diff_xy = Math.max(Math.abs(x - mapped_char.x), Math.abs(y - mapped_char.y)) 
+                var diff_xy = Math.max(Math.abs(x - mapped_char.x), Math.abs(y - mapped_char.y));
                 var diff_z = Math.abs(z - mapped_char.z);
 
                 // The score to add will be a fraction of how accurate the character match is.
@@ -149,9 +147,21 @@ function compare_string(a, b) {
                 // NOTE due to floating point errors,
                 // dividing is moved to results section! (not any more)
                 var numerator = (1 / Math.pow(2, diff_xy + diff_z));
+                var denom = a_map[x][y][z].map(
+                    obj => (
+                        1 / Math.pow(
+                            2,
+                            Math.max(Math.abs(x - obj.x), Math.abs(y - obj.y)) + Math.abs(z - obj.z)
+                        )
+                    )
+                ).reduce((a, b) => a + b, 0);
+                console.log(numerator);
+                console.log(denom);
+
                 mapped_char.scores.push([numerator, denom]);
             });
         } else {
+            console.log('Unfound')
             b_unfound.push(character);
         }
     });
@@ -160,7 +170,7 @@ function compare_string(a, b) {
     var a_unfound = [];
     var scores = [];
     var total_score = 0;
-    var min_denom = null;
+    var score_denominator = null;
 
     a_map['all'].forEach(function (a_obj) {
         // If the character has a score of 0,
@@ -174,10 +184,10 @@ function compare_string(a, b) {
             // Increment total found objects
             a_obj.scores.forEach(function(score){
                 scores.push(score);
-                if (min_denom == null) {
-                    min_denom = score[1];
+                if (score_denominator == null) {
+                    score_denominator = score[1];
                 } else {
-                    min_denom = Math.min(min_denom, score[1]);
+                    score_denominator = Math.min(score_denominator, score[1]);
                 }
             });
         }
@@ -186,7 +196,6 @@ function compare_string(a, b) {
     // Iterate through all scores,
     // Determine lowest common multiple for the denominator
     var score_numerator = 0;
-    var score_denominator = 1;
     scores.forEach(function(score) {
         // Calculate score denominator across all scores.
         score_denominator = calc_lowest_multiple(score_denominator, score[1]);
@@ -202,6 +211,17 @@ function compare_string(a, b) {
     if (score_denominator != 0) {
         total_score = score_numerator / score_denominator;
     }
+
+    // Add missing letters
+    // Use (2^n)-1, as this means first missed letter removes 1 from
+    // score, but then increases to 3, 8 etc..
+    console.log(total_score);
+    // Attempt to find 'un-found' objects to determine missing
+    // characters, otherwise, try comparing lengths of input string
+    var unfound = Math.max(Math.abs(a.length - b.length), Math.pow(2, Math.max(a_unfound.length, b_unfound.length)) - 1);
+    total_score -= unfound;
+    console.log(total_score);
+    console.log(max_score);
     return (total_score >= (max_score - max_score_difference));
 }
 
@@ -273,3 +293,25 @@ function gcd(a, b) {
 function calc_lowest_multiple(a, b) {
     return (a * b) / gcd(a, b);
 }
+
+
+// Checks
+compare_string('and', 'and') || (() => { throw ""; })();
+compare_string('and', 'andp') || (() => { throw ""; })();
+compare_string('and', 'qand') || (() => { throw ""; })();
+compare_string('and', 'an') || (() => { throw ""; })();
+compare_string('and', 'nd') || (() => { throw ""; })();
+compare_string('and', 'qnd') || (() => { throw ""; })();
+compare_string('and', '') && (() => { throw ""; })();
+compare_string('and', 'or') && (() => { throw ""; })();
+compare_string('and', 'ar') && (() => { throw ""; })();
+
+compare_string('or', 'or') || (() => { throw ""; })();
+compare_string('or', 'r') || (() => { throw ""; })();
+compare_string('or', 'o') || (() => { throw ""; })();
+compare_string('or', 'oe') || (() => { throw ""; })();
+compare_string('or', 'op') && (() => { throw ""; })();
+compare_string('or', 'and') && (() => { throw ""; })();
+compare_string('or', 'nb') && (() => { throw ""; })();
+compare_string('abcdefg', 'asdfgggg')
+
