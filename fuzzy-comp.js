@@ -103,15 +103,22 @@ function compare_string(a, b) {
         // Add score to each found element
         if (x in a_map && y in a_map[x] && z in a_map[x][y]) {
             a_map[x][y][z].forEach(function (mapped_char) {
-                if (mapped_char.score < 1) {
+                // Onl allow characters to have a maximum score
+                // of 1. Only accept varient if EITHER Z/Y OR
+                // Z are out (but not both)
+                console.log(a_map);
+                console.log(x + ' ' + y + ' ' + z);
+                if (mapped_char.score < 1 &&
+                        ((x == mapped_char.x && y == mapped_char.y) ||
+                         z == mapped_char.z)) {
                     // Increase the score by a fraction
                     // of the number of elements in
                     // the map
                     // NOTE due to floating point errors,
                     // dividing is moved to results section!
                     mapped_char.score += 1 / a_map[x][y][z].length;
-                    console.log(a_map[x][y][z]);
-                    console.log(mapped_char.score);
+                    // console.log(a_map[x][y][z]);
+                    // console.log(mapped_char.score);
                     mapped_char.score_fraction_denominator += a_map[x][y][z].length;
                     //console.log('found character');
                 }
