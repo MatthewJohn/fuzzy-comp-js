@@ -51,7 +51,7 @@ function compare_string(a, b) {
     //                e.g. if 2 characters are switched by 1 place, the
     //                score difference would be 1.
     //              - A missing character would count 1 (either misssing from a or b)
-    var max_score_difference = 2;
+    var max_score_difference = 1;
 
     // Convert strings to lower case
     a = a.toLowerCase();
@@ -59,7 +59,7 @@ function compare_string(a, b) {
 
     // Maximum score is based on total number of characters (either a or b)
     // since missing characters in a or b will result in a decreased score.
-    var max_score = Math.max(a.length, b.length);
+    var max_score = a.length;
 
     // Map for storing lookup of character objects for a
     var a_map = {
@@ -119,8 +119,37 @@ function compare_string(a, b) {
         // Add score to each found element
         if (x in a_map && y in a_map[x] && z in a_map[x][y]) {
 
-            // See docs bolow for exaplanation
+            // List of mapped_char object that scores have been pushed to.
+            // If exact match is found, these will be reverted.
+            var pushed_chars = []
+            // Whether an exact match has been found
+            var exact_match = false;
             a_map[x][y][z].forEach(function (mapped_char) {
+                // Detect if the character is an exact match
+                if (mapped_char.x == x && mapped_char.y == y && mapped_char.z == z) {
+                    // Remove scores from all other objects that this
+                    // check has added to
+                    pushed_chars.forEach(function(char_obj) {
+                        char_obj.scores.pop();
+                    });
+                    // Mark exact match having been found
+                    exact_match = true;
+
+                    // Give this char object a perfect score
+                    mapped_char.scores.push([1, 1]);
+
+                    // Mark char as having already had a exact match
+                    mapped_char.exact_match = true;
+
+                    // Skip rest of logic
+                    return;
+
+                // If an exact match has already been found, skip,
+                // or the char object has already had an exact match,
+                // skip
+                } else if (exact_match || mapped_char.exact_match) {
+                    return;
+                }
                 // Onl allow characters to have a maximum score
                 // of 1.
                 // if (mapped_char.score < 1) {
@@ -157,11 +186,11 @@ function compare_string(a, b) {
                 ).reduce((a, b) => a + b, 0);
                 console.log(numerator);
                 console.log(denom);
-
+                // Push score to objecs list of scores
                 mapped_char.scores.push([numerator, denom]);
             });
         } else {
-            console.log('Unfound')
+            console.log('Not found');
             b_unfound.push(character);
         }
     });
@@ -218,7 +247,7 @@ function compare_string(a, b) {
     console.log(total_score);
     // Attempt to find 'un-found' objects to determine missing
     // characters, otherwise, try comparing lengths of input string
-    var unfound = Math.max(Math.abs(a.length - b.length), Math.pow(2, Math.max(a_unfound.length, b_unfound.length)) - 1);
+    var unfound = Math.pow(2, b_unfound.length) - 1;
     total_score -= unfound;
     console.log(total_score);
     console.log(max_score);
@@ -236,6 +265,9 @@ function fuzzy_char(char, x, y, z) {
     this.x = x;
     this.y = y;
     this.z = z;
+
+    // An exact match for this object has been found
+    this.exact_match = false;
 
     // Store list of scores
     this.scores = [];
@@ -294,6 +326,7 @@ function calc_lowest_multiple(a, b) {
     return (a * b) / gcd(a, b);
 }
 
+// @TODO Return 1/1 if string matches and reset scores of all others in x,y,z
 
 // Checks
 compare_string('and', 'and') || (() => { throw ""; })();
