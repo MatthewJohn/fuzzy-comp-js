@@ -42,9 +42,18 @@ function compare_string(a, b) {
 
     // Maximum axis offset for a valid character
     var max_offset = 1;
-    // Maximum score factor, which is multiplied by
-    // string length, rounded up
-    var max_score_factor = 0.5;
+    // Maximum score difference before character is treated as
+    // different.
+    // Scores are:  - 1 devided by number of character offset placement
+    //                up to maximum of max_offset.
+    //                e.g. if 2 characters are switched by 1 place, the
+    //                score difference would be 1.
+    //              - A missing character would count 1 (either misssing from a or b)
+    var max_score_difference = 1;
+
+    // Maximum score is based on total number of characters (either a or b)
+    // since missing characters in a or b will result in a decreased score.
+    var max_score = Math.max(a.length, b.length);
 
     // Map for storing lookup of character objects for a
     var a_map = {
@@ -104,22 +113,25 @@ function compare_string(a, b) {
         if (x in a_map && y in a_map[x] && z in a_map[x][y]) {
             a_map[x][y][z].forEach(function (mapped_char) {
                 // Onl allow characters to have a maximum score
-                // of 1. Only accept varient if EITHER Z/Y OR
-                // Z are out (but not both)
-                console.log(a_map);
-                console.log(x + ' ' + y + ' ' + z);
-                if (mapped_char.score < 1 &&
-                        ((x == mapped_char.x && y == mapped_char.y) ||
-                         z == mapped_char.z)) {
-                    // Increase the score by a fraction
-                    // of the number of elements in
-                    // the map
+                // of 1.
+                if (mapped_char.score < 1) {
+                    // Calculate difference in xy and z values, based on
+                    // original character location
+                    var diff_xy = Math.max(Math.abs(x - mapped_char.x), Math.abs(y - mapped_char.y)) 
+                    var diff_z = Math.abs(z - mapped_char.z);
+
+                    // The score to add will be a fraction of how accurate the character match is.
+                    // Increase the score by a fraction  of the number of elements in
+                    // the map.
+                    // If there's a difference in xy or z, the score will be decreased.
                     // NOTE due to floating point errors,
-                    // dividing is moved to results section!
-                    mapped_char.score += 1 / a_map[x][y][z].length;
+                    // dividing is moved to results section! (not any more)
+                    mapped_char.score += (1 / Math.abs(1 + diff_xy + diff_z)) / a_map[x][y][z].length;
+                    console.log(mapped_char);
                     // console.log(a_map[x][y][z]);
                     // console.log(mapped_char.score);
-                    mapped_char.score_fraction_denominator += a_map[x][y][z].length;
+
+                    //mapped_char.score_fraction_denominator += a_map[x][y][z].length;
                     //console.log('found character');
                 }
             });
@@ -131,7 +143,7 @@ function compare_string(a, b) {
     // Iterate character objects from a
     var a_unfound = [];
     var total_score = 0;
-    var total_denominator = 0;
+    //var total_denominator = 0;
 
     a_map['all'].forEach(function (a_obj) {
         // If the character has a score of 0,
@@ -145,27 +157,31 @@ function compare_string(a, b) {
             // Increment total found objects
             total_score += a_obj.score;
             // Add object score to total score
-            total_denominator += a_obj.score_fraction_denominator;
+            //total_denominator += a_obj.score_fraction_denominator;
         }
     });
 
     // Avoid devide zero #CaughtBeforeTesting
-    var found_characters = 0;
-    if (total_score > 0) {
-        // @TODO should this be floor?
-        //found_characters = Math.floor(total_score / total_denominator);
-        console.log(total_score);
-        found_characters = Math.floor(total_score);
-    }
+    //var found_characters = 0;
+    // if (total_score > 0) {
+    //     // @TODO should this be floor?
+    //     //found_characters = Math.floor(total_score / total_denominator);
+    //     console.log(total_score);
+    //     found_characters = Math.floor(total_score);
+    // }
+    console.log('found characters: ' + total_score);
 
     // Determine number of mising characters
     // Since a missed 'a' character could match up
     // with a missed 'b' character (or just completely wrong),
     // use the max of the two numbers
     var missing_characters = Math.max(a_unfound.length, b_unfound.length);
-
-    console.log('Found: ' + found_characters);
+    total_score -= missing_characters;
     console.log('Missing: ' + missing_characters);
+    console.log('total score: ' + total_score);
+    console.log('Max score: ' + max_score)
+
+    console.log('Passed: ' + (total_score >= (max_score - max_score_difference)))
 }
 
 /* Fuzzy character used for storing original
@@ -177,7 +193,7 @@ function fuzzy_char(char, x, y, z) {
     this.y = y;
     this.z = z;
     this.score = 0;
-    this.score_fraction_denominator = 0;
+    //this.score_fraction_denominator = 0;
     return this;
 }
 
@@ -222,3 +238,6 @@ function insert_fuzzy(map, char, x, y, z, max_offset) {
         }
     }
 }
+
+//compare_string('and', 'anf');
+compare_string('aaa', 'aaa');
