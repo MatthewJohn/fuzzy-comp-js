@@ -116,7 +116,6 @@ function compare_string(a, b) {
         if (x == null || y == null) {
             // @TODO conform with whatever return
             // is used at end of the function
-            console.log('what');
             return 0;
         }
         // Add score to each found element
@@ -187,14 +186,11 @@ function compare_string(a, b) {
                         )
                     )
                 ).reduce((a, b) => a + b, 0);
-                console.log(numerator);
-                console.log(denom);
-                console.log(char_itx);
+
                 // Push score to objecs list of scores
                 mapped_char.scores.push([numerator, denom]);
             });
         } else {
-            console.log('Not found');
             b_unfound.push(character);
         }
     });
@@ -237,8 +233,7 @@ function compare_string(a, b) {
         // Calculate numerator for single score and add to total enumerator
         score_numerator += (score[0] * score_denominator / score[1])
     });
-    console.log(score_numerator);
-    console.log(score_denominator);
+
     // If score denominator does not equal 0,
     // Avoid devide zero #CaughtBeforeTesting
     if (score_denominator != 0) {
@@ -248,13 +243,10 @@ function compare_string(a, b) {
     // Add missing letters
     // Use (2^n)-1, as this means first missed letter removes 1 from
     // score, but then increases to 3, 8 etc..
-    console.log(total_score);
-    // Attempt to find 'un-found' objects to determine missing
-    // characters, otherwise, try comparing lengths of input string
+    // Unfound a letters are covered in the main scoring
     var unfound = Math.pow(2, b_unfound.length) - 1;
     total_score -= unfound;
-    console.log(total_score);
-    console.log(max_score);
+
     return (total_score >= (max_score - max_score_difference));
 }
 
@@ -330,7 +322,19 @@ function calc_lowest_multiple(a, b) {
     return (a * b) / gcd(a, b);
 }
 
-// @TODO Return 1/1 if string matches and reset scores of all others in x,y,z
+// @TODO
+//  - Handle spaces (appears to be broken)
+//  - Handle unknown characters
+// Handle missing characters at start of string
+
+
+// What's handled Well
+// - Correct strings (would hope so)
+// - Switched characters near the original
+// - Swapped characters
+
+// What's not handled well and needs improvemnts
+// - Missing characters
 
 // Checks
 compare_string('and', 'and') || (() => { throw ""; })();
