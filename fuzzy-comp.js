@@ -103,14 +103,18 @@ function compare_string(a, b) {
         // Add score to each found element
         if (x in a_map && y in a_map[x] && z in a_map[x][y]) {
             a_map[x][y][z].forEach(function (mapped_char) {
-                // Increase the score by a fraction
-                // of the number of elements in
-                // the map
-                // NOTE due to floating point errors,
-                // dividing is moved to results section!
-                mapped_char.score += 1;
-                mapped_char.score_fraction_denominator += a_map[x][y][z].length;
-                //console.log('found character');
+                if (mapped_char.score < 1) {
+                    // Increase the score by a fraction
+                    // of the number of elements in
+                    // the map
+                    // NOTE due to floating point errors,
+                    // dividing is moved to results section!
+                    mapped_char.score += 1 / a_map[x][y][z].length;
+                    console.log(a_map[x][y][z]);
+                    console.log(mapped_char.score);
+                    mapped_char.score_fraction_denominator += a_map[x][y][z].length;
+                    //console.log('found character');
+                }
             });
         } else {
             b_unfound.push(character);
@@ -142,7 +146,9 @@ function compare_string(a, b) {
     var found_characters = 0;
     if (total_score > 0) {
         // @TODO should this be floor?
-        found_characters = Math.floor(total_score / total_denominator);
+        //found_characters = Math.floor(total_score / total_denominator);
+        console.log(total_score);
+        found_characters = Math.floor(total_score);
     }
 
     // Determine number of mising characters
