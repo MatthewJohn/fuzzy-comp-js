@@ -314,13 +314,10 @@ function insert_fuzzy(map, char, x, y, z, max_offset) {
 }
 
 /* Calculate greates common dividor */
-function gcd(a, b) {
-    return !b ? a : gcd(b, a % b);
-}
+var gcd = (a, b) => !b ? a : gcd(b, a % b);
+
 /* Calculate lowest common multiple */
-function calc_lowest_multiple(a, b) {
-    return (a * b) / gcd(a, b);
-}
+var calc_lowest_multiple = (a, b) => (a * b) / gcd(a, b);
 
 // @TODO
 //  - Handle spaces (appears to be broken)
@@ -354,5 +351,6 @@ compare_string('or', 'oe') || (() => { throw ""; })();
 compare_string('or', 'op') && (() => { throw ""; })();
 compare_string('or', 'and') && (() => { throw ""; })();
 compare_string('or', 'nb') && (() => { throw ""; })();
+compare_string('or', 'er') && (() => { throw ""; })();
 compare_string('abcdefg', 'asdfgggg')
 
